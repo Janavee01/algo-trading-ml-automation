@@ -32,6 +32,39 @@ for symbol in stock_symbols:
 
         # Show Buy Signals
         buy_signals = df[df['Buy_Signal']]
+        trades = []
+
+        for signal_date in buy_signals.index:
+            entry_price = df.loc[signal_date, 'Close']
+            exit_index = df.index.get_loc(signal_date) + 5  # 5 trading days ahead
+
+            if exit_index < len(df):
+                exit_date = df.index[exit_index]
+                exit_price = df.iloc[exit_index]['Close']
+            else:
+                exit_date = df.index[-1]
+                exit_price = df.iloc[-1]['Close']
+
+            profit_percent = ((exit_price - entry_price) / entry_price) * 100
+            result = 'Win' if profit_percent > 0 else 'Loss'
+
+            trades.append({
+                'Stock': symbol,
+                'Entry Date': signal_date.date(),
+                'Entry Price': round(entry_price, 2),
+                'Exit Date': exit_date.date(),
+                'Exit Price': round(exit_price, 2),
+                'P&L %': round(profit_percent, 2),
+                'Result': result
+            })
+
+        # Print trade summary after loop
+        if trades:
+            print("\n💼 Trade Summary:")
+            trade_df = pd.DataFrame(trades)
+            print(trade_df)
+            print(f"🏁 Win Ratio: {round((trade_df['Result'] == 'Win').mean() * 100, 2)}%")
+
         print(f"📌 {len(buy_signals)} Buy Signals for {symbol}")
         if not buy_signals.empty:
             print(buy_signals[['Close', 'RSI', '20DMA', '50DMA']])
